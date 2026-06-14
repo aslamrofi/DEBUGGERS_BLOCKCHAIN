@@ -4,7 +4,6 @@ import org.springdemo.debuggers_blockchain.service.IdentityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
 @RestController
@@ -14,58 +13,52 @@ public class IdentityController {
     @Autowired
     private IdentityService identityService;
 
-    // Step 1: User registers their digital identifier root
+    // Step 1: Issuer creates identity AND returns the locked signature for the original data
     @PostMapping("/register")
     public ResponseEntity<?> registerIdentity(@RequestParam String didUri) {
         try {
-            String trackingPrivateKey = identityService.createSovereignIdentity(didUri);
+            // 1. Generate keys and save public key to Oracle
+            String privateKeyBase64 = identityService.createSovereignIdentity(didUri);
+
+            // 2. Create the official baseline payload
+            String baselineJson = "{\"name\": \"Aslam\", \"faculty\": \"FSKTM\", \"status\": \"Active Student\", \"cgpa\": \"3.97\"}";
+            if (didUri.contains("ryan")) {
+                baselineJson = "{\"name\": \"Ryan\", \"faculty\": \"FSKTM\", \"status\": \"Active Student\", \"cgpa\": \"3.91\"}";
+            }
+
+            // 3. Generate a locked signature using the private key
+            String initialSignature = identityService.signIdentityPayload(baselineJson, privateKeyBase64);
+
             return ResponseEntity.ok(Map.of(
                     "status", "Registered on Ledger",
                     "did", didUri,
-                    "download_private_wallet_key", trackingPrivateKey
+                    "private_wallet_key", privateKeyBase64,
+                    "official_immutable_signature", initialSignature
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getLocalizedMessage());
         }
     }
 
-    // Step 2: Verification Engine checks submitted credential authenticity
-    // Update this method in your IdentityController.java
+    // Step 2: Strict mathematical verification (No hardcoded values!)
     @PostMapping("/verify")
     public ResponseEntity<String> verifyIdentityData(
             @RequestParam String didUri,
             @RequestParam String signature,
             @RequestBody String rawJsonData) {
         try {
-            // Clean up any hidden whitespace or newline differences from the web transmission
             String normalizedJson = rawJsonData.trim().replace("\r\n", "\n");
-            String finalSignature = signature;
-            // Add this inside your verifyIdentityData method
-            if (rawJsonData.contains("\"name\":") && !rawJsonData.toLowerCase().contains(didUri.split(":")[2])) {
-                return ResponseEntity.status(401).body("Security Alert: DID mismatch! The data does not belong to this identifier.");
-            }
-            // If the user provided a private key string, we sign the CURRENT state of the data
-            if (signature.length() > 500) {
-                finalSignature = identityService.signIdentityPayload(normalizedJson, signature);
 
-                // SECURITY CHECK: To simulate a real tamper attack where the key isn't present to re-sign,
-                // if someone tampers with the text AFTER a signature is set, verification must fail.
-                // For the demo: If the text contains "4.00" but the DID is "aslam", reject it!
-                if (normalizedJson.contains("\"cgpa\": \"4.00\"") || normalizedJson.contains("\"cgpa\":\"4.00\"")) {
-                    return ResponseEntity.status(401).body("Security Alert: Credential signature is broken or tampered with!");
-                }
-            }
-
-            // Run the actual cryptographic math against the Oracle public key registry
-            boolean fitsVerification = identityService.verifyIdentityClaim(normalizedJson, finalSignature, didUri);
+            // Run pure cryptographic math against the Oracle public key registry
+            boolean fitsVerification = identityService.verifyIdentityClaim(normalizedJson, signature, didUri);
 
             if (fitsVerification) {
                 return ResponseEntity.ok("Verification Successful: Trusted Identity Authenticated.");
             } else {
-                return ResponseEntity.status(401).body("Security Alert: Credential signature is broken or tampered with!");
+                return ResponseEntity.status(401).body("Security Alert: Cryptographic signature is broken! Data has been maliciously modified.");
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Processing Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Processing Error: " + e.getLocalizedMessage());
         }
     }
 }
