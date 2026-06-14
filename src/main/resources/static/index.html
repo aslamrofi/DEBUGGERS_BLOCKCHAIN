@@ -37,45 +37,55 @@
     <p class="subtitle">Blockchain-Anchored Self-Sovereign Identity (SSI) Simulator mapped to Oracle 19c</p>
 
     <!-- SECTION 1: ISSUER FLOW -->
-    <div class="section">
+    <div class="section" style="margin-bottom: 35px; padding: 25px;">
         <h2>1. Decentralized Identifier (DID) Generation <span class="badge">Issuer Flow</span></h2>
 
-        <div class="explanation">
-            <strong>How it works:</strong> The system generates an asymmetric RSA 2048-bit KeyPair for the user.
-            The Public Key is anchored securely on the blockchain ledger (your CSBC_BLOCKCHAIN_LEDGER Oracle table) tied to a unique URI pointer (DID).
-            The matching Private Key is returned exclusively to the user's secure wallet. The ledger never stores private keys or actual identity records!Define the student's baseline identity profile below. When you click register, these claims are locked cryptographically against your Oracle ledger anchor.
+        <div class="explanation" style="margin-bottom: 25px;">
+            <strong>How it works (Cryptographic Registration):</strong>
+            <p style="margin: 5px 0 10px 0;">This module simulates a Trusted Issuer (University Administration) initializing a student's Decentralized Identity:</p>
+            <ul style="margin: 0 0 0 20px; padding: 0;">
+                <li>Generates an asymmetric <strong>RSA 2048-bit KeyPair</strong> for the student.</li>
+                <li>Anchors the <strong>Public Key</strong> securely into the <code>CSBC_BLOCKCHAIN_LEDGER</code> Oracle table, mapping it to a unique DID URI pointer.</li>
+                <li>Signs the custom student profile attributes dynamically, returning a tamper-proof credential baseline signature to the holder.</li>
+            </ul>
         </div>
 
-        <div class="syntax-card">
-            <div class="syntax-title">DID Target Examples</div>
-            <div class="syntax-code">did:csbc:aslam</div>
-            <div class="syntax-code">did:csbc:hairie</div>
-            <div class="syntax-code">did:csbc:ryan</div>
-            <div class="syntax-code">did:csbc:iqmal</div>
-            <div class="syntax-code">did:csbc:iyad</div>
+        <div class="syntax-card" style="margin-bottom: 25px;">
+            <div class="syntax-title">Authorized DID Target Formats</div>
+            <div style="font-size:0.85rem; color:#475569; margin-bottom:8px;">Valid identifier URI strings mapping active node profiles inside the database registry:</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <div class="syntax-code" style="margin: 0; padding: 6px 10px;">did:csbc:aslam</div>
+                <div class="syntax-code" style="margin: 0; padding: 6px 10px;">did:csbc:hairie</div>
+                <div class="syntax-code" style="margin: 0; padding: 6px 10px;">did:csbc:ryan</div>
+                <div class="syntax-code" style="margin: 0; padding: 6px 10px;">did:csbc:iqmal</div>
+                <div class="syntax-code" style="margin: 0; padding: 6px 10px;">did:csbc:iyad</div>
+            </div>
         </div>
 
-        <label for="regDid">Target Identity URI (DID Pointer):</label>
-        <input type="text" id="regDid" value="did:csbc:ryan" style="margin-bottom: 15px;">
+        <div style="margin-bottom: 20px;">
+            <label for="regDid" style="display: block; margin-bottom: 8px; font-weight: bold; color: #475569;">Target Identity URI (DID Pointer):</label>
+            <input type="text" id="regDid" value="did:csbc:ryan" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+        </div>
 
-        <div style="background: #e2e8f0; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
-            <span style="font-weight: bold; color: #1e3a8a; display:block; margin-bottom:10px;">Set Initial Identity Profile Claims:</span>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="background: #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+            <span style="font-weight: bold; color: #1e3a8a; display: block; margin-bottom: 15px; font-size: 1rem;">Set Initial Identity Profile Claims:</span>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div>
-                    <label style="margin-top:0;">Student Name:</label>
-                    <input type="text" id="regName" value="Ryan">
+                    <label style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569; font-size: 0.9rem;">Student Name:</label>
+                    <input type="text" id="regName" value="Ryan" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
                 </div>
                 <div>
-                    <label style="margin-top:0;">Faculty:</label>
-                    <input type="text" id="regFaculty" value="FSKTM">
+                    <label style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569; font-size: 0.9rem;">Faculty:</label>
+                    <input type="text" id="regFaculty" value="FSKTM" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
                 </div>
                 <div>
-                    <label style="margin-top:0;">Enrollment Status:</label>
-                    <input type="text" id="regStatus" value="Active Student">
+                    <label style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569; font-size: 0.9rem;">Enrollment Status:</label>
+                    <input type="text" id="regStatus" value="Active Student" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
                 </div>
                 <div>
-                    <label style="margin-top:0;">Starting CGPA:</label>
-                    <input type="text" id="regCgpa" value="3.91">
+                    <label style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569; font-size: 0.9rem;">Starting CGPA:</label>
+                    <input type="text" id="regCgpa" value="3.91" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
                 </div>
             </div>
         </div>
@@ -83,7 +93,7 @@
         <div class="btn-group">
             <button onclick="registerIdentity()">Generate & Register KeyPair</button>
         </div>
-        <div id="regOutput" class="output" style="display:none; margin-top: 20px;"></div>
+        <div id="regOutput" class="output" style="display: none; margin-top: 20px;"></div>
     </div>
 
     <!-- SECTION 2: VERIFIER FLOW -->
