@@ -157,9 +157,7 @@
         <div id="verifyOutput" class="output"></div>
     </div>
 </div>
-
 <script>
-    // FIX: Added the missing register function
     async function registerIdentity() {
         const didUri = document.getElementById('regDid').value;
         const outDiv = document.getElementById('regOutput');
@@ -170,6 +168,7 @@
         };
 
         outDiv.style.display = "block";
+        outDiv.style.color = "#38bdf8";
         outDiv.innerText = "[SYSTEM LOG]: Generating RSA KeyPair...\n[SYSTEM LOG]: Writing Public Key to Oracle 19c...";
 
         try {
@@ -178,46 +177,75 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(studentPayload)
             });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                outDiv.innerText = `[REGISTRATION ERROR]: ${errorText}`;
+                outDiv.style.color = "#ef4444";
+                return;
+            }
+
             const data = await response.json();
             outDiv.innerText = JSON.stringify(data, null, 2);
+            outDiv.style.color = "#38bdf8";
 
-            if(data.official_immutable_signature) {
+            if (data.official_immutable_signature) {
                 document.getElementById('verifyDid').value = data.did;
                 document.getElementById('verifySignature').value = data.official_immutable_signature;
+                document.getElementById('quickName').value = studentPayload.name;
+                document.getElementById('quickCgpa').value = studentPayload.cgpa;
                 document.getElementById('verifyJson').value = JSON.stringify(studentPayload, null, 2);
 
-                // --- UPDATE TABLE HERE (Inside the IF block) ---
-                const ledgerBody = document.getElementById('oracleLedgerBody');
-                ledgerBody.innerHTML = `
-                <tr>
-                    <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; color: #0369a1;">${data.did}</td>
-                    <td style="border: 1px solid #cbd5e1; padding: 8px; color: #059669;">MIIBIjANBgkqhkiG9w0BAQEFA... (Anchored)</td>
-                </tr>
-            `;
+                await refreshLedgerTable();
             }
         } catch (err) {
-            outDiv.innerText = "[ERROR]: Server connection failed.";
+            outDiv.innerText = "[ERROR]: Server connection failed.\n" + err;
+            outDiv.style.color = "#ef4444";
             console.error(err);
         }
     }
+
     async function refreshLedgerTable() {
         const ledgerBody = document.getElementById('oracleLedgerBody');
 
         try {
             const response = await fetch('/api/identity/ledger');
-            const entries = await response.json();
 
-            // Clear the "Register an identity..." placeholder
+            if (!response.ok) {
+                console.error("Ledger endpoint failed:", await response.text());
+                return;
+            }
+
+            const entries = await response.json();
             ledgerBody.innerHTML = "";
+
+            if (entries.length === 0) {
+                ledgerBody.innerHTML = `
+                    <tr>
+                        <td style="border: 1px solid #cbd5e1; padding: 8px; color: #94a3b8;" colspan="2">
+                            No registered identities found.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
 
             entries.forEach(entry => {
                 const row = document.createElement('tr');
+
+                const publicKeyPreview = entry.public_key_base64
+                    ? `${entry.public_key_base64.substring(0, 50)}... (Anchored)`
+                    : "No public key found";
+
                 row.innerHTML = `
-                <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; color: #0369a1;">${entry.did_uri}</td>
-                <td style="border: 1px solid #cbd5e1; padding: 8px; color: #059669; font-size: 0.7rem; word-break: break-all;">
-                    ${entry.public_key_base64.substring(0, 50)}... (Anchored)
-                </td>
-            `;
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; color: #0369a1;">
+                        ${entry.did_uri}
+                    </td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; color: #059669; font-size: 0.7rem; word-break: break-all;">
+                        ${publicKeyPreview}
+                    </td>
+                `;
+
                 ledgerBody.appendChild(row);
             });
         } catch (err) {
@@ -225,9 +253,6 @@
         }
     }
 
-    // Call this at the end of your registerIdentity() function
-    // after the successful registration fetch:
-    await refreshLedgerTable();
     async function verifyIdentity() {
         const didUri = document.getElementById('verifyDid').value;
         const signature = document.getElementById('verifySignature').value;
@@ -235,6 +260,14 @@
         const outDiv = document.getElementById('verifyOutput');
 
         outDiv.style.display = "block";
+
+        if (!signature.trim()) {
+            outDiv.style.color = "#f59e0b";
+            outDiv.innerText = "[WARNING]: Please generate or paste a cryptographic signature first.";
+            return;
+        }
+
+        outDiv.style.color = "#38bdf8";
         outDiv.innerText = "[SYSTEM LOG]: Resolving DID Public Key...\n[SYSTEM LOG]: Verifying RSA Signature...";
 
         try {
@@ -244,6 +277,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: jsonData
             });
+
             const resultText = await response.text();
             outDiv.innerText = `[SERVER RESPONSE]: ${resultText}`;
             outDiv.style.color = response.ok ? "#4ade80" : "#ef4444";
@@ -254,34 +288,34 @@
     }
 
     function applyClaimsToJson() {
-        try {
-            const parsed = {
-                name: document.getElementById('quickName').value,
-                cgpa: document.getElementById('quickCgpa').value
-            };
-            document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
-        } catch (e) { alert("Invalid inputs."); }
+        const parsed = {
+            name: document.getElementById('quickName').value,
+            cgpa: document.getElementById('quickCgpa').value
+        };
+
+        document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
     }
 
     function simulateAttack() {
-        try {
-            // Change the Quick Edit input so the user sees the "hack"
-            document.getElementById('quickCgpa').value = "4.00";
+        document.getElementById('quickCgpa').value = "4.00";
 
-            // Update the JSON monitor
-            let parsed = {
-                name: document.getElementById('quickName').value,
-                cgpa: "4.00"
-            };
-            document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
+        const parsed = {
+            name: document.getElementById('quickName').value,
+            cgpa: "4.00"
+        };
 
-            const outDiv = document.getElementById('verifyOutput');
-            outDiv.style.display = "block";
-            outDiv.style.color = "#f59e0b";
-            outDiv.innerText = "[ATTACK]: Maliciously changed CGPA to 4.00!\nVerify now to see the security anchor catch the tamper.";
-        } catch(e) { alert("JSON error."); }
+        document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
+
+        const outDiv = document.getElementById('verifyOutput');
+        outDiv.style.display = "block";
+        outDiv.style.color = "#f59e0b";
+        outDiv.innerText = "[ATTACK]: Maliciously changed CGPA to 4.00!\nVerify now to see the security anchor catch the tamper.";
     }
-</script>
 
+    document.addEventListener('DOMContentLoaded', () => {
+        applyClaimsToJson();
+        refreshLedgerTable();
+    });
+</script>
 </body>
 </html>
