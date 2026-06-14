@@ -97,15 +97,28 @@
         <label for="verifySignature">Cryptographic Signature:</label>
         <textarea id="verifySignature" placeholder="Paste the official immutable signature generated above..."></textarea>
 
-        <label for="verifyJson">Identity Data Claims Payload (JSON):</label>
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; align-items: start;">
-            <textarea id="verifyJson">{"name": "Ryan", "cgpa": "3.91"}</textarea>
-            <div style="background: #e2e8f0; padding: 15px; border-radius: 8px;">
-                <label style="margin-top: 0;">Quick Edit:</label>
-                <input type="text" id="quickName" value="Ryan" placeholder="Name" style="margin-bottom: 10px;">
-                <input type="text" id="quickCgpa" value="3.91" placeholder="CGPA" style="margin-bottom: 10px;">
-                <button onclick="applyClaimsToJson()" style="width: 100%;">Apply to JSON</button>
+        <label>Identity Data Claims Payload:</label>
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: stretch; margin-bottom: 20px;">
+
+            <div style="background: #e2e8f0; padding: 20px; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <span style="font-weight: bold; color: #1e3a8a; display: block; margin-bottom: 15px; font-size: 1rem;">Active Verification Claims:</span>
+
+                    <label for="quickName" style="margin-top: 0; font-size: 0.85rem; color: #475569;">Student Name:</label>
+                    <input type="text" id="quickName" value="Ryan" placeholder="Example: Ryan" style="margin-bottom: 15px; width: 100%;">
+
+                    <label for="quickCgpa" style="margin-top: 0; font-size: 0.85rem; color: #475569;">Target CGPA Matrix:</label>
+                    <input type="text" id="quickCgpa" value="3.91" placeholder="Example: 3.91" style="margin-bottom: 15px; width: 100%;">
+                </div>
+
+                <button onclick="applyClaimsToJson()" style="width: 100%; background: #0284c7; margin-top: 10px;">Sync & Update Claims Vector</button>
             </div>
+
+            <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 0.8rem; font-weight: bold; color: #64748b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em;">Compiled JSON Payload (Read-Only Matrix)</span>
+                <textarea id="verifyJson" style="flex-grow: 1; height: calc(100% - 25px); margin-bottom: 0; background: #fafafa; color: #334155;" readonly>{"name": "Ryan", "cgpa": "3.91"}</textarea>
+            </div>
+
         </div>
 
         <div class="btn-group">
