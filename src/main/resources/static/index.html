@@ -12,22 +12,18 @@
         .section { margin-bottom: 35px; padding: 25px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }
         h2 { margin-top: 0; color: #2563eb; display: flex; align-items: center; gap: 10px; }
         .badge { background: #dbeafe; color: #1e40af; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; }
-
-        /* Explanation Box Styling */
         .explanation { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; border-radius: 0 6px 6px 0; font-size: 0.95rem; line-height: 1.5; }
-        .explanation ul { margin: 5px 0 0 20px; padding: 0; }
-
         label { display: block; margin: 15px 0 5px; font-weight: bold; color: #475569; }
         input[type="text"], textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: #fff; font-size: 0.95rem; }
         textarea { height: 100px; font-family: 'Courier New', Courier, monospace; }
-
+        .syntax-card { background: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .syntax-title { font-weight: bold; color: #475569; font-size: 0.85rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .syntax-code { font-family: 'Courier New', monospace; background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-size: 0.85rem; color: #2563eb; display: inline-block; margin-right: 5px; margin-bottom: 5px; }
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
         button:hover { background: #1d4ed8; }
         button.secondary { background: #64748b; }
-        button.secondary:hover { background: #475569; }
-
-        .output { margin-top: 20px; padding: 15px; background: #0f172a; color: #38bdf8; font-family: 'Courier New', Courier, monospace; border-radius: 6px; white-space: pre-wrap; word-break: break-all; font-size: 0.9rem; max-height: 250px; overflow-y: auto; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5); }
+        .output { margin-top: 20px; padding: 15px; background: #0f172a; color: #38bdf8; font-family: 'Courier New', Courier, monospace; border-radius: 6px; white-space: pre-wrap; word-break: break-all; font-size: 0.9rem; min-height: 50px; display: none; }
     </style>
 </head>
 <body>
@@ -37,56 +33,49 @@
     <p class="subtitle">Blockchain-Anchored Self-Sovereign Identity (SSI) Simulator mapped to Oracle 19c</p>
 
     <!-- SECTION 1: ISSUER FLOW -->
-    <div class="section" style="margin-bottom: 35px; padding: 25px;">
+    <div class="section">
         <h2>1. Decentralized Identifier (DID) Generation <span class="badge">Issuer Flow</span></h2>
 
-        <div class="explanation" style="margin-bottom: 25px;">
+        <div class="explanation">
             <strong>How it works (Cryptographic Registration):</strong>
             <p style="margin: 5px 0 10px 0;">This module simulates a Trusted Issuer (University Administration) initializing a student's Decentralized Identity:</p>
-            <ul style="margin: 0 0 0 20px; padding: 0;">
+            <ul style="margin-left: 20px;">
                 <li>Generates an asymmetric <strong>RSA 2048-bit KeyPair</strong> for the student.</li>
-                <li>Anchors the <strong>Public Key</strong> securely into the <code>CSBC_BLOCKCHAIN_LEDGER</code> Oracle table, mapping it to a unique DID URI pointer.</li>
-                <li>Signs the custom student profile attributes dynamically, returning a tamper-proof credential baseline signature to the holder.</li>
+                <li>Anchors the <strong>Public Key</strong> into Oracle, mapping it to a unique DID URI pointer.</li>
+                <li>Signs student attributes, returning a tamper-proof signature to the holder.</li>
             </ul>
         </div>
 
-        <div class="syntax-card" style="margin-bottom: 25px;">
+        <div class="syntax-card">
             <div class="syntax-title">Authorized DID Target Formats</div>
-            <div style="font-size:0.85rem; color:#475569; margin-bottom:8px;">Valid identifier URI strings mapping active node profiles inside the database registry:</div>
-            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                <div class="syntax-code" style="margin: 0; padding: 6px 10px;">did:csbc:aslam</div>
-                <div class="syntax-code" style="margin: 0; padding: 6px 10px;">did:csbc:hairie</div>
-                <div class="syntax-code" style="margin: 0; padding: 6px 10px;">did:csbc:ryan</div>
-                <div class="syntax-code" style="margin: 0; padding: 6px 10px;">did:csbc:iqmal</div>
-                <div class="syntax-code" style="margin: 0; padding: 6px 10px;">did:csbc:iyad</div>
-            </div>
+            <div class="syntax-code">did:csbc:aslam</div>
+            <div class="syntax-code">did:csbc:hairie</div>
+            <div class="syntax-code">did:csbc:ryan</div>
+            <div class="syntax-code">did:csbc:iqmal</div>
+            <div class="syntax-code">did:csbc:iyad</div>
         </div>
 
-        <div style="margin-bottom: 20px;">
-            <label for="regDid" style="display: block; margin-bottom: 8px; font-weight: bold; color: #475569;">Target Identity URI (DID Pointer):</label>
-            <input type="text" id="regDid" value="did:csbc:ryan" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
-        </div>
+        <label for="regDid">Target Identity URI (DID Pointer):</label>
+        <input type="text" id="regDid" value="did:csbc:ryan">
 
-        <div style="background: #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-            <span style="font-weight: bold; color: #1e3a8a; display: block; margin-bottom: 15px; font-size: 1rem;">Set Initial Identity Profile Claims:</span>
-
+        <div style="background: #e2e8f0; padding: 20px; border-radius: 8px; margin-top: 20px; margin-bottom: 20px;">
+            <span style="font-weight: bold; color: #1e3a8a; display: block; margin-bottom: 15px;">Set Initial Identity Profile Claims:</span>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569; font-size: 0.9rem;">Student Name:</label>
-                    <input type="text" id="regName" value="Ryan" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <label style="margin-top:0;">Student Name:</label>
+                    <input type="text" id="regName" value="Ryan">
                 </div>
                 <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569; font-size: 0.9rem;">Starting CGPA:</label>
-                    <input type="text" id="regCgpa" value="3.91" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <label style="margin-top:0;">Starting CGPA:</label>
+                    <input type="text" id="regCgpa" value="3.91">
                 </div>
             </div>
-        </div>
         </div>
 
         <div class="btn-group">
             <button onclick="registerIdentity()">Generate & Register KeyPair</button>
         </div>
-        <div id="regOutput" class="output" style="display: none; margin-top: 20px;"></div>
+        <div id="regOutput" class="output"></div>
     </div>
 
     <!-- SECTION 2: VERIFIER FLOW -->
@@ -96,58 +85,26 @@
         <div class="explanation">
             <strong>How it works (Decentralized Trust):</strong>
             <ul>
-                <li>The user sends a claims statement (JSON payload) along with their unique cryptographic signature.</li>
-                <li>The Verifier queries the Oracle database using the provided <strong>DID URI</strong> to resolve the corresponding Public Key.</li>
-                <li>The crypto engine processes the data: if even one character inside the identity JSON changes, the verification immediately fails, proving malicious tampering.</li>
+                <li>The user sends a claims statement (JSON) and a cryptographic signature.</li>
+                <li>Verifier resolves the Public Key from Oracle via the <strong>DID URI</strong>.</li>
+                <li>If the JSON data changes by even one character, verification fails.</li>
             </ul>
         </div>
 
-        <!-- DID Examples -->
-        <div class="syntax-card">
-            <div class="syntax-title">DID Target Examples</div>
-            <div class="syntax-code">did:csbc:aslam</div>
-            <div class="syntax-code">did:csbc:hairie</div>
-            <div class="syntax-code">did:csbc:ryan</div>
-            <div class="syntax-code">did:csbc:iqmal</div>
-            <div class="syntax-code">did:csbc:iyad</div>
-        </div>
-
         <label for="verifyDid">Holder DID Target:</label>
-        <input type="text" id="verifyDid" value="did:csbc:aslam" style="margin-bottom: 25px;">
-
-        <!-- Signature Examples -->
-        <div class="syntax-card">
-            <div class="syntax-title">Signature Input Examples: </div>
-            <div class="syntax-code">MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwg...[Truncated Base64 String]</div>
-            <div class="syntax-code">i6G8XmY9vNBlK1pZqWw3eE9zU21hTG9jYWx4...[Truncated Base64 String]</div>
-            <div class="syntax-code">MALFORMED_INVALID_SIGNATURE_VECTOR_XYZ7890000000000000</div>
-        </div>
+        <input type="text" id="verifyDid" value="did:csbc:ryan">
 
         <label for="verifySignature">Cryptographic Signature:</label>
-        <textarea id="verifySignature" placeholder="Paste the official immutable signature generated above, or use an existing signature..." style="margin-bottom: 25px;"></textarea>
+        <textarea id="verifySignature" placeholder="Paste the official immutable signature generated above..."></textarea>
 
-        <!-- JSON Examples -->
-        <div class="syntax-card">
-            <div class="syntax-title">JSON Examples: </div>
-            <div class="syntax-code">{"name": "Aslam", "cgpa": "3.97"}</div>
-            <div class="syntax-code">{"name": "Hairie", "cgpa": "3.88"}</div>
-            <div class="syntax-code">{"name": "Ryan", "cgpa": "3.91"}</div>
-            <div class="syntax-code">{"name": "Iqmal", "cgpa": "3.79"}</div>
-            <div class="syntax-code">{"name": "Iyad", "cgpa": "3.99"}</div>
-        </div>
-
-        <label for="verifyJson">Identity Data Claims Payload (JSON Example):</label>
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; align-items: start; margin-bottom: 15px;">
-            <textarea id="verifyJson" style="margin-bottom: 0;">{"name": "Aslam", "cgpa": "3.97"}</textarea>
-
+        <label for="verifyJson">Identity Data Claims Payload (JSON):</label>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; align-items: start;">
+            <textarea id="verifyJson">{"name": "Ryan", "cgpa": "3.91"}</textarea>
             <div style="background: #e2e8f0; padding: 15px; border-radius: 8px;">
-                <label for="quickName" style="margin-top: 0;">Quick Name Input:</label>
-                <input type="text" id="quickName" value="Aslam" placeholder="Example: Aslam" style="margin-bottom: 10px;">
-
-                <label for="quickCgpa">Quick CGPA Input:</label>
-                <input type="text" id="quickCgpa" value="3.97" placeholder="Example: 3.97" style="margin-bottom: 10px;">
-
-                <button onclick="applyClaimsToJson()" style="width: 100%;">Apply Name & CGPA to JSON</button>
+                <label style="margin-top: 0;">Quick Edit:</label>
+                <input type="text" id="quickName" value="Ryan" placeholder="Name" style="margin-bottom: 10px;">
+                <input type="text" id="quickCgpa" value="3.91" placeholder="CGPA" style="margin-bottom: 10px;">
+                <button onclick="applyClaimsToJson()" style="width: 100%;">Apply to JSON</button>
             </div>
         </div>
 
@@ -155,74 +112,90 @@
             <button onclick="verifyIdentity()">Verify Integrity & Authenticate</button>
             <button class="secondary" onclick="simulateAttack()">Simulate Tamper Attack</button>
         </div>
+        <div id="verifyOutput" class="output"></div>
     </div>
 </div>
 
 <script>
+    // FIX: Added the missing register function
+    async function registerIdentity() {
+        const didUri = document.getElementById('regDid').value;
+        const outDiv = document.getElementById('regOutput');
+
+        const studentPayload = {
+            name: document.getElementById('regName').value,
+            cgpa: document.getElementById('regCgpa').value
+        };
+
+        outDiv.style.display = "block";
+        outDiv.innerText = "[SYSTEM LOG]: Generating RSA KeyPair...\n[SYSTEM LOG]: Writing Public Key to Oracle 19c...";
+
+        try {
+            const response = await fetch(`/api/identity/register?didUri=${encodeURIComponent(didUri)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(studentPayload)
+            });
+            const data = await response.json();
+            outDiv.innerText = JSON.stringify(data, null, 2);
+
+            if(data.official_immutable_signature) {
+                document.getElementById('verifyDid').value = data.did;
+                document.getElementById('verifySignature').value = data.official_immutable_signature;
+                document.getElementById('verifyJson').value = JSON.stringify(studentPayload, null, 2);
+            }
+        } catch (err) {
+            outDiv.innerText = "[ERROR]: Server connection failed.";
+        }
+    }
+
     async function verifyIdentity() {
         const didUri = document.getElementById('verifyDid').value;
         const signature = document.getElementById('verifySignature').value;
         const jsonData = document.getElementById('verifyJson').value;
         const outDiv = document.getElementById('verifyOutput');
 
-        if(!signature) {
-            outDiv.style.display = "block";
-            outDiv.style.color = "#f59e0b";
-            outDiv.innerText = "[WARNING]: You must input a private key signature string to run cryptographic verification.";
-            return;
-        }
-
         outDiv.style.display = "block";
-        outDiv.innerText = "[SYSTEM LOG]: Fetching DID Public Document from Oracle database...\n[SYSTEM LOG]: Computing SHA-256 validation matrices...";
+        outDiv.innerText = "[SYSTEM LOG]: Resolving DID Public Key...\n[SYSTEM LOG]: Verifying RSA Signature...";
 
         try {
             const url = `/api/identity/verify?didUri=${encodeURIComponent(didUri)}&signature=${encodeURIComponent(signature)}`;
             const response = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
+                headers: { 'Content-Type': 'application/json' },
                 body: jsonData
             });
             const resultText = await response.text();
             outDiv.innerText = `[SERVER RESPONSE]: ${resultText}`;
             outDiv.style.color = response.ok ? "#4ade80" : "#ef4444";
         } catch (err) {
-            outDiv.innerText = "[NETWORK REJECTION]: " + err;
+            outDiv.innerText = "[ERROR]: " + err;
             outDiv.style.color = "#ef4444";
         }
     }
 
     function applyClaimsToJson() {
-        const jsonTextArea = document.getElementById('verifyJson');
-        const quickName = document.getElementById('quickName').value;
-        const quickCgpa = document.getElementById('quickCgpa').value;
-
         try {
-            const parsed = JSON.parse(jsonTextArea.value);
-            parsed.name = quickName;
-            parsed.cgpa = quickCgpa;
-            jsonTextArea.value = JSON.stringify(parsed, null, 2);
-        } catch (e) {
-            alert("Please make sure your Identity Data contains valid JSON formatting before applying Name and CGPA.");
-        }
+            const parsed = {
+                name: document.getElementById('quickName').value,
+                cgpa: document.getElementById('quickCgpa').value
+            };
+            document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
+        } catch (e) { alert("Invalid inputs."); }
     }
 
     function simulateAttack() {
-        // Simple function to alter the payload data to break the signature validation
-        let dataTextArea = document.getElementById('verifyJson');
         try {
-            let parsed = JSON.parse(dataTextArea.value);
-            parsed.cgpa = "4.00";
-            dataTextArea.value = JSON.stringify(parsed);
-
+            let dataBox = document.getElementById('verifyJson');
+            let parsed = JSON.parse(dataBox.value);
+            parsed.cgpa = "4.00"; // Maliciously change data
+            dataBox.value = JSON.stringify(parsed, null, 2);
             const outDiv = document.getElementById('verifyOutput');
             outDiv.style.display = "block";
             outDiv.style.color = "#f59e0b";
-            outDiv.innerText = "[ATTACK SIMULATION]: Maliciously changed CGPA to 4.00 inside the payload text area!\nClick 'Verify Integrity' now to test the blockchain anchor's defense capability.";
-        } catch(e) {
-            alert("Please make sure your Identity Data contains valid JSON formatting before simulating an attack.");
-        }
+            outDiv.innerText = "[ATTACK]: Maliciously changed CGPA to 4.00!\nVerify now to see the security anchor catch the tamper.";
+        } catch(e) { alert("JSON error."); }
     }
-
 </script>
 
 </body>
