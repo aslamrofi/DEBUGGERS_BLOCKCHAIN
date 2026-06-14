@@ -80,4 +80,16 @@ public class IdentityController {
             return ResponseEntity.badRequest().body("Processing Error: Invalid JSON Format provided.");
         }
     }
+
+    // 🌟 ADD THIS METHOD INSIDE IDENTITYCONTROLLER.JAVA 🌟
+    @GetMapping("/ledger")
+    public ResponseEntity<?> getOracleLedgerEntries() {
+        try {
+            // Calls your service layer to pull all DIDs from the database
+            java.util.List<java.util.Map<String, String>> entries = identityService.getAllRegisteredIdentities();
+            return ResponseEntity.ok(entries);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to read Oracle ledger registry.");
+        }
+    }
 }
