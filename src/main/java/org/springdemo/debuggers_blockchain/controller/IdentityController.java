@@ -1,5 +1,7 @@
 package org.springdemo.debuggers_blockchain.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springdemo.debuggers_blockchain.service.IdentityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,20 +15,23 @@ public class IdentityController {
     @Autowired
     private IdentityService identityService;
 
-    // Step 1: Issuer creates identity AND returns the locked signature for the original data
+    @Autowired
+    private ObjectMapper objectMapper; // Spring Boot auto-configures this Jackson mapper
+
     @PostMapping("/register")
     public ResponseEntity<?> registerIdentity(
             @RequestParam String didUri,
-            @RequestBody String customJsonData) { // <--- Accepts JSON from the website now
+            @RequestBody String customJsonData) {
         try {
-            // 1. Generate keys and save the public key anchor to Oracle 19c
+            // 1. CANONICALIZATION: Parse and serialize to strip all formatting/newlines/spaces
+            JsonNode jsonNode = objectMapper.readTree(customJsonData);
+            String canonicalJson = objectMapper.writeValueAsString(jsonNode);
+
+            // 2. Generate keys and anchor public key to Oracle 19c
             String privateKeyBase64 = identityService.createSovereignIdentity(didUri);
 
-            // 2. Clean up any hidden whitespace from the web transmission
-            String normalizedJson = customJsonData.trim().replace("\r\n", "\n");
-
-            // 3. Generate the locked cryptographic signature using the website's data payload
-            String initialSignature = identityService.signIdentityPayload(normalizedJson, privateKeyBase64);
+            // 3. Sign the exact CANONICAL string
+            String initialSignature = identityService.signIdentityPayload(canonicalJson, privateKeyBase64);
 
             return ResponseEntity.ok(Map.of(
                     "status", "Registered on Ledger",
@@ -35,21 +40,22 @@ public class IdentityController {
                     "official_immutable_signature", initialSignature
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getLocalizedMessage());
+            return ResponseEntity.badRequest().body("Registration Error: " + e.getLocalizedMessage());
         }
     }
 
-    // Step 2: Strict mathematical verification (No hardcoded values!)
     @PostMapping("/verify")
     public ResponseEntity<String> verifyIdentityData(
             @RequestParam String didUri,
             @RequestParam String signature,
             @RequestBody String rawJsonData) {
         try {
-            String normalizedJson = rawJsonData.trim().replace("\r\n", "\n");
+            // 1. CANONICALIZATION: Force the incoming data to match the exact same structure style
+            JsonNode jsonNode = objectMapper.readTree(rawJsonData);
+            String canonicalJson = objectMapper.writeValueAsString(jsonNode);
 
-            // Run pure cryptographic math against the Oracle public key registry
-            boolean fitsVerification = identityService.verifyIdentityClaim(normalizedJson, signature, didUri);
+            // 2. Run mathematical verification on the normalized text string
+            boolean fitsVerification = identityService.verifyIdentityClaim(canonicalJson, signature, didUri);
 
             if (fitsVerification) {
                 return ResponseEntity.ok("Verification Successful: Trusted Identity Authenticated.");
@@ -57,7 +63,7 @@ public class IdentityController {
                 return ResponseEntity.status(401).body("Security Alert: Cryptographic signature is broken! Data has been maliciously modified.");
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Processing Error: " + e.getLocalizedMessage());
+            return ResponseEntity.badRequest().body("Processing Error: Invalid JSON Format provided.");
         }
     }
 }
