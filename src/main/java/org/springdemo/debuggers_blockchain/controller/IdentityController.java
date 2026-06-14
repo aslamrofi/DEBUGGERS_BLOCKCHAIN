@@ -15,19 +15,18 @@ public class IdentityController {
 
     // Step 1: Issuer creates identity AND returns the locked signature for the original data
     @PostMapping("/register")
-    public ResponseEntity<?> registerIdentity(@RequestParam String didUri) {
+    public ResponseEntity<?> registerIdentity(
+            @RequestParam String didUri,
+            @RequestBody String customJsonData) { // <--- Accepts JSON from the website now
         try {
-            // 1. Generate keys and save public key to Oracle
+            // 1. Generate keys and save the public key anchor to Oracle 19c
             String privateKeyBase64 = identityService.createSovereignIdentity(didUri);
 
-            // 2. Create the official baseline payload
-            String baselineJson = "{\"name\": \"Aslam\", \"faculty\": \"FSKTM\", \"status\": \"Active Student\", \"cgpa\": \"3.97\"}";
-            if (didUri.contains("ryan")) {
-                baselineJson = "{\"name\": \"Ryan\", \"faculty\": \"FSKTM\", \"status\": \"Active Student\", \"cgpa\": \"3.91\"}";
-            }
+            // 2. Clean up any hidden whitespace from the web transmission
+            String normalizedJson = customJsonData.trim().replace("\r\n", "\n");
 
-            // 3. Generate a locked signature using the private key
-            String initialSignature = identityService.signIdentityPayload(baselineJson, privateKeyBase64);
+            // 3. Generate the locked cryptographic signature using the website's data payload
+            String initialSignature = identityService.signIdentityPayload(normalizedJson, privateKeyBase64);
 
             return ResponseEntity.ok(Map.of(
                     "status", "Registered on Ledger",

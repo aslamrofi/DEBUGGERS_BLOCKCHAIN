@@ -41,12 +41,7 @@
         <h2>1. Decentralized Identifier (DID) Generation <span class="badge">Issuer Flow</span></h2>
 
         <div class="explanation">
-            <strong>How it works (Cryptographic Registration):</strong>
-            <ul>
-                <li>The system generates an asymmetric <strong>RSA 2048-bit KeyPair</strong> for the user.</li>
-                <li>The <strong>Public Key</strong> is anchored securely on the blockchain ledger (your <code>CSBC_BLOCKCHAIN_LEDGER</code> Oracle table) tied to a unique URI pointer (DID).</li>
-                <li>The matching <strong>Private Key</strong> is returned exclusively to the user's secure wallet. The ledger never stores private keys or actual identity records!</li>
-            </ul>
+            <strong>How it works:</strong> Define the student's baseline identity profile below. When you click register, these claims are locked cryptographically against your Oracle ledger anchor.
         </div>
 
         <div class="syntax-card">
@@ -57,9 +52,31 @@
             <div class="syntax-code">did:csbc:iqmal</div>
             <div class="syntax-code">did:csbc:iyad</div>
         </div>
-
+        
         <label for="regDid">Target Identity URI (DID Pointer):</label>
-        <input type="text" id="regDid" value="did:csbc:aslam" style="margin-bottom: 15px;">
+        <input type="text" id="regDid" value="did:csbc:ryan" style="margin-bottom: 15px;">
+
+        <div style="background: #e2e8f0; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+            <span style="font-weight: bold; color: #1e3a8a; display:block; margin-bottom:10px;">Set Initial Identity Profile Claims:</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label style="margin-top:0;">Student Name:</label>
+                    <input type="text" id="regName" value="Ryan">
+                </div>
+                <div>
+                    <label style="margin-top:0;">Faculty:</label>
+                    <input type="text" id="regFaculty" value="FSKTM">
+                </div>
+                <div>
+                    <label style="margin-top:0;">Enrollment Status:</label>
+                    <input type="text" id="regStatus" value="Active Student">
+                </div>
+                <div>
+                    <label style="margin-top:0;">Starting CGPA:</label>
+                    <input type="text" id="regCgpa" value="3.91">
+                </div>
+            </div>
+        </div>
 
         <div class="btn-group">
             <button onclick="registerIdentity()">Generate & Register KeyPair</button>
