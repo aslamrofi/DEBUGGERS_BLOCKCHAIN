@@ -271,41 +271,43 @@
     async function verifyIdentity() {
         const didUri = document.getElementById('verifyDid').value;
         const signature = document.getElementById('verifySignature').value;
-        const jsonData = document.getElementById('verifyJson').value;
         const outDiv = document.getElementById('verifyOutput');
+
+        // 🌟 FIX: Grab the current ID value from the visible text input element
+        const studentId = document.getElementById('verifyId').value;
+        const jsonPayload = JSON.stringify({ id: studentId });
+
+        outDiv.style.display = "block";
+        outDiv.innerText = "[SYSTEM LOG]: Calling Oracle 19c framework context verification matrix...";
 
         try {
             const url = `/api/identity/verify?didUri=${encodeURIComponent(didUri)}&signature=${encodeURIComponent(signature)}`;
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: jsonData
+                body: jsonPayload // 🌟 FIX: Send the actual active data string matrix here instead of {}
             });
 
-            const data = await response.json(); // Read JSON instead of plain text now
+            const data = await response.json();
 
-            // Extract the strings passed down by your Java engine
-            const origHashTruncated = data.originalHash.substring(0, 32) + "...";
-            const currHashTruncated = data.currentHash.substring(0, 32) + "...";
-
-            // Display them in the monitor boxes
-            document.getElementById('hashOriginalDisplay').innerText = origHashTruncated;
-            document.getElementById('hashCurrentDisplay').innerText = currHashTruncated;
+            // Render the raw hex values in the comparison window
+            document.getElementById('hashOriginalDisplay').innerText = data.originalHash.substring(0,45) + "...";
+            document.getElementById('hashCurrentDisplay').innerText = data.currentHash.substring(0,45) + "...";
 
             if (data.success) {
-                document.getElementById('hashCurrentStatus').innerText = "[VALID]";
+                document.getElementById('hashCurrentStatus').innerText = "[MATCHED - ACCESS GRANTED]";
                 document.getElementById('hashCurrentStatus').style.color = "#4ade80";
+                outDiv.innerText = `[SUCCESS]: ${data.message}`;
                 outDiv.style.color = "#4ade80";
             } else {
-                document.getElementById('hashCurrentStatus').innerText = "[TAMPERED]";
+                document.getElementById('hashCurrentStatus').innerText = "[REJECTED - INVALID KEY]";
                 document.getElementById('hashCurrentStatus').style.color = "#ef4444";
+                outDiv.innerText = `[SECURITY BLOCK]: ${data.message}`;
                 outDiv.style.color = "#ef4444";
             }
-
-            outDiv.style.display = "block";
-            outDiv.innerText = `[SERVER RESPONSE]: ${data.message}`;
         } catch (err) {
-            outDiv.innerText = "[ERROR]: Synchronization exception.";
+            outDiv.innerText = "[ERROR]: Authentication endpoint transaction dropped.";
+            outDiv.style.color = "#ef4444";
         }
     }
 
