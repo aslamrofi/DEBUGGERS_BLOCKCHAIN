@@ -36,6 +36,7 @@
     <h1>CSBC Digital Identity Management Framework</h1>
     <p class="subtitle">Blockchain-Anchored Self-Sovereign Identity (SSI) Simulator mapped to Oracle 19c</p>
 
+    <!-- SECTION 1: ISSUER FLOW -->
     <div class="section">
         <h2>1. Decentralized Identifier (DID) Generation <span class="badge">Issuer Flow</span></h2>
 
@@ -48,15 +49,23 @@
             </ul>
         </div>
 
+        <div class="syntax-card">
+            <div class="syntax-title">DID Target Examples:</div>
+            <div class="syntax-code">did:csbc:aslam</div>
+            <div class="syntax-code">did:csbc:wanafiq</div>
+            <div class="syntax-code">did:csbc:fsktm_admin</div>
+        </div>
+
         <label for="regDid">Target Identity URI (DID Pointer):</label>
-        <input type="text" id="regDid" value="did:csbc:aslam">
+        <input type="text" id="regDid" value="did:csbc:aslam" style="margin-bottom: 15px;">
 
         <div class="btn-group">
             <button onclick="registerIdentity()">Generate & Register KeyPair</button>
         </div>
-        <div id="regOutput" class="output" style="display:none;"></div>
+        <div id="regOutput" class="output" style="display:none; margin-top: 20px;"></div>
     </div>
 
+    <!-- SECTION 2: VERIFIER FLOW -->
     <div class="section">
         <h2>2. Cryptographic Verification Portal <span class="badge">Verifier Flow</span></h2>
 
@@ -69,20 +78,44 @@
             </ul>
         </div>
 
+        <!-- DID Examples -->
+        <div class="syntax-card">
+            <div class="syntax-title">DID Target Examples:</div>
+            <div class="syntax-code">did:csbc:aslam</div>
+            <div class="syntax-code">did:csbc:wanafiq</div>
+            <div class="syntax-code">did:csbc:fsktm_admin</div>
+        </div>
+
         <label for="verifyDid">Holder DID Target:</label>
-        <input type="text" id="verifyDid" value="did:csbc:aslam">
+        <input type="text" id="verifyDid" value="did:csbc:aslam" style="margin-bottom: 25px;">
+
+        <!-- Signature Examples -->
+        <div class="syntax-card">
+            <div class="syntax-title">Signature Input Examples: </div>
+            <div class="syntax-code">MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwg...[Truncated Base64 String]</div>
+            <div class="syntax-code">i6G8XmY9vNBlK1pZqWw3eE9zU21hTG9jYWx4...[Truncated Base64 String]</div>
+            <div class="syntax-code">MALFORMED_INVALID_SIGNATURE_VECTOR_XYZ7890000000000000</div>
+        </div>
 
         <label for="verifySignature">Cryptographic Signature:</label>
-        <input type="text" id="verifySignature" placeholder="Paste the download_private_wallet_key string generated above to sign, or use an existing signature...">
+        <input type="text" id="verifySignature" placeholder="Paste the download_private_wallet_key string generated above to sign, or use an existing signature..." style="margin-bottom: 25px;">
+
+        <!-- JSON Examples -->
+        <div class="syntax-card">
+            <div class="syntax-title">JSON Examples: </div>
+            <div class="syntax-code">{"name": "Aslam", "faculty": "FSKTM", "status": "Active Student", "cgpa": "3.97"}</div>
+            <div class="syntax-code">{"matrixNo": "230405", "accessLevel": "Student_Level_3", "enrolledSemester": "A252"}</div>
+            <div class="syntax-code">{"courseCode": "CCS4504", "courseName": "Computer Forensics", "achievedGrade": "A"}</div>
+        </div>
 
         <label for="verifyJson">Identity Data Claims Payload (JSON Example):</label>
-        <textarea id="verifyJson">{"name": "Aslam", "faculty": "FSKTM", "status": "Active Student", "cgpa": "3.97"}</textarea>
+        <textarea id="verifyJson" style="margin-bottom: 15px;">{"name": "Aslam", "faculty": "FSKTM", "status": "Active Student", "cgpa": "3.97"}</textarea>
 
         <div class="btn-group">
             <button onclick="verifyIdentity()">Verify Integrity & Authenticate</button>
             <button class="secondary" onclick="simulateAttack()">Simulate Tamper Attack</button>
         </div>
-        <div id="verifyOutput" class="output" style="display:none;"></div>
+        <div id="verifyOutput" class="output" style="display:none; margin-top: 20px;"></div>
     </div>
 </div>
 
