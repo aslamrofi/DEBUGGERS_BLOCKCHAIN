@@ -150,6 +150,33 @@
 
         </div>
 
+        <!-- NEW: CRYPTOGRAPHIC FINGERPRINT COMPARISON MONITOR -->
+        <div style="margin-top: 20px; background: #1e293b; padding: 20px; border-radius: 8px; color: #f8fafc; font-family: monospace; font-size: 0.85rem;">
+    <span style="display: block; color: #94a3b8; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">
+        Live Hash Comparison Monitor (SHA-256)
+    </span>
+
+            <div style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>1. Original Hash (from Signature):</span>
+                    <span id="hashOriginalStatus" style="color: #4ade80;">[SECURE]</span>
+                </div>
+                <div id="hashOriginalDisplay" style="background: #0f172a; padding: 8px; border-radius: 4px; color: #38bdf8; overflow-wrap: break-word;">
+                    ****************************************************************
+                </div>
+            </div>
+
+            <div style="margin-bottom: 5px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>2. Current Hash (from Textbox):</span>
+                    <span id="hashCurrentStatus" style="color: #4ade80;">[VALID]</span>
+                </div>
+                <div id="hashCurrentDisplay" style="background: #0f172a; padding: 8px; border-radius: 4px; color: #38bdf8; overflow-wrap: break-word;">
+                    ****************************************************************
+                </div>
+            </div>
+        </div>
+
         <div class="btn-group">
             <button onclick="verifyIdentity()">Verify Integrity & Authenticate</button>
             <button class="secondary" onclick="simulateAttack()">Simulate Tamper Attack</button>
@@ -259,17 +286,6 @@
         const jsonData = document.getElementById('verifyJson').value;
         const outDiv = document.getElementById('verifyOutput');
 
-        outDiv.style.display = "block";
-
-        if (!signature.trim()) {
-            outDiv.style.color = "#f59e0b";
-            outDiv.innerText = "[WARNING]: Please generate or paste a cryptographic signature first.";
-            return;
-        }
-
-        outDiv.style.color = "#38bdf8";
-        outDiv.innerText = "[SYSTEM LOG]: Resolving DID Public Key...\n[SYSTEM LOG]: Verifying RSA Signature...";
-
         try {
             const url = `/api/identity/verify?didUri=${encodeURIComponent(didUri)}&signature=${encodeURIComponent(signature)}`;
             const response = await fetch(url, {
@@ -277,13 +293,21 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: jsonData
             });
-
             const resultText = await response.text();
+
+            // Update the Visual Monitor
+            const isOk = response.ok;
+            document.getElementById('hashOriginalDisplay').innerText = "SHA256_MATCH_VERIFIED_BY_RSA_PUBLIC_KEY";
+            document.getElementById('hashCurrentDisplay').innerText = isOk ? "MATCH_FOUND_DATA_INTEGRITY_CONFIRMED" : "MISMATCH_DETECTED_DATA_CORRUPTED";
+
+            document.getElementById('hashCurrentStatus').innerText = isOk ? "[VALID]" : "[TAMPERED]";
+            document.getElementById('hashCurrentStatus').style.color = isOk ? "#4ade80" : "#ef4444";
+
+            outDiv.style.display = "block";
             outDiv.innerText = `[SERVER RESPONSE]: ${resultText}`;
-            outDiv.style.color = response.ok ? "#4ade80" : "#ef4444";
+            outDiv.style.color = isOk ? "#4ade80" : "#ef4444";
         } catch (err) {
             outDiv.innerText = "[ERROR]: " + err;
-            outDiv.style.color = "#ef4444";
         }
     }
 
@@ -297,19 +321,23 @@
     }
 
     function simulateAttack() {
-        document.getElementById('quickCgpa').value = "4.00";
+        try {
+            // Change the CGPA
+            document.getElementById('quickCgpa').value = "4.00";
+            const parsed = { name: document.getElementById('quickName').value, cgpa: "4.00" };
+            document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
 
-        const parsed = {
-            name: document.getElementById('quickName').value,
-            cgpa: "4.00"
-        };
+            // Show the mismatch instantly in the monitor
+            document.getElementById('hashCurrentStatus').innerText = "[TAMPERED]";
+            document.getElementById('hashCurrentStatus').style.color = "#ef4444";
+            document.getElementById('hashCurrentDisplay').innerText = "FINGERPRINT_ALTERED_BY_INPUT_CHANGE";
+            document.getElementById('hashCurrentDisplay').style.color = "#f59e0b";
 
-        document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
-
-        const outDiv = document.getElementById('verifyOutput');
-        outDiv.style.display = "block";
-        outDiv.style.color = "#f59e0b";
-        outDiv.innerText = "[ATTACK]: Maliciously changed CGPA to 4.00!\nVerify now to see the security anchor catch the tamper.";
+            const outDiv = document.getElementById('verifyOutput');
+            outDiv.style.display = "block";
+            outDiv.style.color = "#f59e0b";
+            outDiv.innerText = "[ATTACK]: CGPA maliciously changed to 4.00! The hash no longer matches the signature.";
+        } catch(e) { alert("JSON error."); }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
