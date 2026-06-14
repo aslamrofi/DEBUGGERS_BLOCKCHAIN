@@ -52,32 +52,46 @@ public class IdentityController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<String> verifyIdentityData(
+    public ResponseEntity<?> verifyIdentityData(
             @RequestParam String didUri,
             @RequestParam String signature,
-            @RequestBody String rawJsonData) {
+            @RequestBody Map<String, String> payload) { // 🌟 Receive as Map to extract "id"
         try {
-            JsonNode jsonNode = objectMapper.readTree(rawJsonData);
+            // 1. Extract the ID from the JSON payload sent by the frontend
+            String studentId = payload.get("id");
+            String jsonToVerify = "{\"id\":\"" + studentId + "\"}"; // Reconstruct the exact JSON string
 
-            if (!jsonNode.has("id") || !jsonNode.get("id").asText().matches("\\d{4}")) {
-                return ResponseEntity.badRequest().body("Processing Error: ID must be exactly 4 digits.");
+            // 2. Run the cryptographic check against the reconstructed JSON
+            boolean isValidOwner = identityService.verifyIdentityClaim(jsonToVerify, signature, didUri);
+
+            // 3. Generate hashes for the UI Comparison Monitor
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(jsonToVerify.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
             }
+            String computedHash = hexString.toString();
 
-            Map<String, String> simplifiedPayload = Map.of(
-                    "id", jsonNode.get("id").asText()
-            );
-
-            String canonicalJson = objectMapper.writeValueAsString(simplifiedPayload);
-
-            boolean fitsVerification = identityService.verifyIdentityClaim(canonicalJson, signature, didUri);
-
-            if (fitsVerification) {
-                return ResponseEntity.ok("Verification Successful: Trusted Identity Authenticated.");
+            if (isValidOwner) {
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "message", "Access Granted: Identity authenticated via Oracle Ledger.",
+                        "originalHash", computedHash,
+                        "currentHash", computedHash
+                ));
             } else {
-                return ResponseEntity.status(401).body("Security Alert: Cryptographic signature is broken! Data has been maliciously modified.");
+                return ResponseEntity.status(401).body(Map.of(
+                        "success", false,
+                        "message", "Security Block: Digital Signature mismatch.",
+                        "originalHash", "ERROR_HASH_EXPECTED_MATCH_FAILED",
+                        "currentHash", computedHash
+                ));
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Processing Error: Invalid JSON Format provided.");
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Server processing error"));
         }
     }
 
