@@ -41,7 +41,9 @@
         <h2>1. Decentralized Identifier (DID) Generation <span class="badge">Issuer Flow</span></h2>
 
         <div class="explanation">
-            <strong>How it works:</strong> Define the student's baseline identity profile below. When you click register, these claims are locked cryptographically against your Oracle ledger anchor.
+            <strong>How it works:</strong> The system generates an asymmetric RSA 2048-bit KeyPair for the user.
+            The Public Key is anchored securely on the blockchain ledger (your CSBC_BLOCKCHAIN_LEDGER Oracle table) tied to a unique URI pointer (DID).
+            The matching Private Key is returned exclusively to the user's secure wallet. The ledger never stores private keys or actual identity records!Define the student's baseline identity profile below. When you click register, these claims are locked cryptographically against your Oracle ledger anchor.
         </div>
 
         <div class="syntax-card">
@@ -52,7 +54,7 @@
             <div class="syntax-code">did:csbc:iqmal</div>
             <div class="syntax-code">did:csbc:iyad</div>
         </div>
-        
+
         <label for="regDid">Target Identity URI (DID Pointer):</label>
         <input type="text" id="regDid" value="did:csbc:ryan" style="margin-bottom: 15px;">
 
@@ -146,21 +148,36 @@
     async function registerIdentity() {
         const didUri = document.getElementById('regDid').value;
         const outDiv = document.getElementById('regOutput');
+
+        // Dynamically build the JSON object based on what you typed in the website text fields
+        const studentPayload = {
+            name: document.getElementById('regName').value,
+            faculty: document.getElementById('regFaculty').value,
+            status: document.getElementById('regStatus').value,
+            cgpa: document.getElementById('regCgpa').value
+        };
+
         outDiv.style.display = "block";
-        outDiv.innerText = "[SYSTEM LOG]: Generating RSA KeyPair and inserting public anchor into Oracle...";
+        outDiv.innerText = "[SYSTEM LOG]: Packing identity JSON strings...\n[SYSTEM LOG]: Writing public anchor keys to Oracle 19c...";
 
         try {
-            const response = await fetch(`/api/identity/register?didUri=${encodeURIComponent(didUri)}`, { method: 'POST' });
+            const response = await fetch(`/api/identity/register?didUri=${encodeURIComponent(didUri)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(studentPayload) // <--- Sends your custom web input to Java
+            });
             const data = await response.json();
             outDiv.innerText = JSON.stringify(data, null, 2);
             outDiv.style.color = "#38bdf8";
 
-            // Auto-populate the signature verify block to make testing seamless
-            if(data.download_private_wallet_key) {
-                document.getElementById('verifySignature').value = data.download_private_wallet_key;
+            // Auto-populate verification targets below to make testing fast
+            if(data.official_immutable_signature) {
+                document.getElementById('verifyDid').value = data.did;
+                document.getElementById('verifySignature').value = data.official_immutable_signature;
+                document.getElementById('verifyJson').value = JSON.stringify(studentPayload, null, 2);
             }
         } catch (err) {
-            outDiv.innerText = "[CRITICAL FAILURE]: Could not establish communication with database endpoint.\n" + err;
+            outDiv.innerText = "[CRITICAL DATA ERROR]: Server connection dropped.\n" + err;
             outDiv.style.color = "#ef4444";
         }
     }
