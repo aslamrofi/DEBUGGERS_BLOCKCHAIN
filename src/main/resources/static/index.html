@@ -3,50 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSBC - Decentralized Identity Framework</title>
+    <title>CSBC - Decentralized Identity Management Simulator</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 40px; }
-        .container { max-width: 700px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 0 auto; }
-        h1 { color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
-        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fafafa; }
-        h2 { margin-top: 0; color: #2563eb; }
-        label { display: block; margin: 10px 0 5px; font-weight: bold; }
-        input[type="text"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        textarea { height: 80px; font-family: monospace; }
-        button { background: #2563eb; color: white; border: none; padding: 10px 15px; margin-top: 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f4f8; color: #1e293b; margin: 0; padding: 40px; }
+        .container { max-width: 800px; background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin: 0 auto; }
+        h1 { color: #1e3a8a; border-bottom: 3px solid #3b82f6; padding-bottom: 12px; margin-top: 0; }
+        p.subtitle { color: #64748b; font-size: 1.1rem; margin-top: -5px; margin-bottom: 30px; }
+        .section { margin-bottom: 35px; padding: 25px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }
+        h2 { margin-top: 0; color: #2563eb; display: flex; align-items: center; gap: 10px; }
+        .badge { background: #dbeafe; color: #1e40af; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; }
+
+        /* Explanation Box Styling */
+        .explanation { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; border-radius: 0 6px 6px 0; font-size: 0.95rem; line-height: 1.5; }
+        .explanation ul { margin: 5px 0 0 20px; padding: 0; }
+
+        label { display: block; margin: 15px 0 5px; font-weight: bold; color: #475569; }
+        input[type="text"], textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: #fff; font-size: 0.95rem; }
+        textarea { height: 100px; font-family: 'Courier New', Courier, monospace; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
         button:hover { background: #1d4ed8; }
-        .output { margin-top: 15px; padding: 12px; background: #1e293b; color: #00ff66; font-family: monospace; border-radius: 4px; white-space: pre-wrap; word-break: break-all; }
+        button.secondary { background: #64748b; }
+        button.secondary:hover { background: #475569; }
+
+        .output { margin-top: 20px; padding: 15px; background: #0f172a; color: #38bdf8; font-family: 'Courier New', Courier, monospace; border-radius: 6px; white-space: pre-wrap; word-break: break-all; font-size: 0.9rem; max-height: 250px; overflow-y: auto; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>CSBC Digital Identity Management</h1>
-    <p>Simulated W3C Decentralized Identifier (DID) Trust Engine mapped to Oracle 19c.</p>
+    <h1>CSBC Digital Identity Management Framework</h1>
+    <p class="subtitle">Blockchain-Anchored Self-Sovereign Identity (SSI) Simulator mapped to Oracle 19c</p>
 
     <div class="section">
-        <h2>1. Decentralized Identifier (DID) Generation</h2>
-        <p>Generates an RSA KeyPair. Stored Public Key on Oracle Ledger; Hands Private Key to User Wallet.</p>
-        <label for="regDid">Enter Target DID URI:</label>
+        <h2>1. Decentralized Identifier (DID) Generation <span class="badge">Issuer Flow</span></h2>
+
+        <div class="explanation">
+            <strong>How it works (Cryptographic Registration):</strong>
+            <ul>
+                <li>The system generates an asymmetric <strong>RSA 2048-bit KeyPair</strong> for the user.</li>
+                <li>The <strong>Public Key</strong> is anchored securely on the blockchain ledger (your <code>CSBC_BLOCKCHAIN_LEDGER</code> Oracle table) tied to a unique URI pointer (DID).</li>
+                <li>The matching <strong>Private Key</strong> is returned exclusively to the user's secure wallet. The ledger never stores private keys or actual identity records!</li>
+            </ul>
+        </div>
+
+        <label for="regDid">Target Identity URI (DID Pointer):</label>
         <input type="text" id="regDid" value="did:csbc:aslam">
-        <button onclick="registerIdentity()">Generate & Register Identity</button>
+
+        <div class="btn-group">
+            <button onclick="registerIdentity()">Generate & Register KeyPair</button>
+        </div>
         <div id="regOutput" class="output" style="display:none;"></div>
     </div>
 
     <div class="section">
-        <h2>2. Cryptographic Identity Verification Portal</h2>
-        <p>Simulates an external verifier verifying the validity of user claims via the public ledger anchor.</p>
+        <h2>2. Cryptographic Verification Portal <span class="badge">Verifier Flow</span></h2>
 
-        <label for="verifyDid">Holder DID URI:</label>
+        <div class="explanation">
+            <strong>How it works (Decentralized Trust):</strong>
+            <ul>
+                <li>The user sends a claims statement (JSON payload) along with their unique cryptographic signature.</li>
+                <li>The Verifier queries the Oracle database using the provided <strong>DID URI</strong> to resolve the corresponding Public Key.</li>
+                <li>The crypto engine processes the data: if even one character inside the identity JSON changes, the verification immediately fails, proving malicious tampering.</li>
+            </ul>
+        </div>
+
+        <label for="verifyDid">Holder DID Target:</label>
         <input type="text" id="verifyDid" value="did:csbc:aslam">
 
         <label for="verifySignature">Cryptographic Signature:</label>
-        <input type="text" id="verifySignature" placeholder="Paste the generated signature block here...">
+        <input type="text" id="verifySignature" placeholder="Paste the download_private_wallet_key string generated above to sign, or use an existing signature...">
 
-        <label for="verifyJson">Identity Raw Data (JSON format):</label>
-        <textarea id="verifyJson">{"name": "Aslam", "faculty": "FSKTM", "status": "Active Student"}</textarea>
+        <label for="verifyJson">Identity Data Claims Payload (JSON Example):</label>
+        <textarea id="verifyJson">{"name": "Aslam", "faculty": "FSKTM", "status": "Active Student", "cgpa": "3.97"}</textarea>
 
-        <button onclick="verifyIdentity()">Verify Claims Authenticity</button>
+        <div class="btn-group">
+            <button onclick="verifyIdentity()">Verify Integrity & Authenticate</button>
+            <button class="secondary" onclick="simulateAttack()">Simulate Tamper Attack</button>
+        </div>
         <div id="verifyOutput" class="output" style="display:none;"></div>
     </div>
 </div>
@@ -56,16 +91,21 @@
         const didUri = document.getElementById('regDid').value;
         const outDiv = document.getElementById('regOutput');
         outDiv.style.display = "block";
-        outDiv.innerText = "Querying Ledger Network...";
+        outDiv.innerText = "[SYSTEM LOG]: Generating RSA KeyPair and inserting public anchor into Oracle...";
 
         try {
             const response = await fetch(`/api/identity/register?didUri=${encodeURIComponent(didUri)}`, { method: 'POST' });
             const data = await response.json();
             outDiv.innerText = JSON.stringify(data, null, 2);
-            outDiv.style.color = "#00ff66";
+            outDiv.style.color = "#38bdf8";
+
+            // Auto-populate the signature verify block to make testing seamless
+            if(data.download_private_wallet_key) {
+                document.getElementById('verifySignature').value = data.download_private_wallet_key;
+            }
         } catch (err) {
-            outDiv.innerText = "Error tracking registration: " + err;
-            outDiv.style.color = "#ff3333";
+            outDiv.innerText = "[CRITICAL FAILURE]: Could not establish communication with database endpoint.\n" + err;
+            outDiv.style.color = "#ef4444";
         }
     }
 
@@ -74,8 +114,16 @@
         const signature = document.getElementById('verifySignature').value;
         const jsonData = document.getElementById('verifyJson').value;
         const outDiv = document.getElementById('verifyOutput');
+
+        if(!signature) {
+            outDiv.style.display = "block";
+            outDiv.style.color = "#f59e0b";
+            outDiv.innerText = "[WARNING]: You must input a private key signature string to run cryptographic verification.";
+            return;
+        }
+
         outDiv.style.display = "block";
-        outDiv.innerText = "Verifying signatures against Oracle Ledger keys...";
+        outDiv.innerText = "[SYSTEM LOG]: Fetching DID Public Document from Oracle database...\n[SYSTEM LOG]: Computing SHA-256 validation matrices...";
 
         try {
             const url = `/api/identity/verify?didUri=${encodeURIComponent(didUri)}&signature=${encodeURIComponent(signature)}`;
@@ -85,11 +133,28 @@
                 body: jsonData
             });
             const resultText = await response.text();
-            outDiv.innerText = resultText;
-            outDiv.style.color = response.ok ? "#00ff66" : "#ff3333";
+            outDiv.innerText = `[SERVER RESPONSE]: ${resultText}`;
+            outDiv.style.color = response.ok ? "#4ade80" : "#ef4444";
         } catch (err) {
-            outDiv.innerText = "Network execution error: " + err;
-            outDiv.style.color = "#ff3333";
+            outDiv.innerText = "[NETWORK REJECTION]: " + err;
+            outDiv.style.color = "#ef4444";
+        }
+    }
+
+    function simulateAttack() {
+        // Simple function to alter the payload data to break the signature validation
+        let dataTextArea = document.getElementById('verifyJson');
+        try {
+            let parsed = JSON.parse(dataTextArea.value);
+            parsed.cgpa = "4.00"; // Alter the core metric maliciously
+            dataTextArea.value = JSON.stringify(parsed);
+
+            const outDiv = document.getElementById('verifyOutput');
+            outDiv.style.display = "block";
+            outDiv.style.color = "#f59e0b";
+            outDiv.innerText = "[ATTACK SIMULATION]: Maliciously changed CGPA to 4.00 inside the payload text area!\nClick 'Verify Integrity' now to test the blockchain anchor's defense capability.";
+        } catch(e) {
+            alert("Please make sure your Identity Data contains valid JSON formatting before simulating an attack.");
         }
     }
 </script>
