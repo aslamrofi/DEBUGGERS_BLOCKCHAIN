@@ -40,7 +40,10 @@ public class IdentityController {
             // Clean up any hidden whitespace or newline differences from the web transmission
             String normalizedJson = rawJsonData.trim().replace("\r\n", "\n");
             String finalSignature = signature;
-
+            // Add this inside your verifyIdentityData method
+            if (rawJsonData.contains("\"name\":") && !rawJsonData.toLowerCase().contains(didUri.split(":")[2])) {
+                return ResponseEntity.status(401).body("Security Alert: DID mismatch! The data does not belong to this identifier.");
+            }
             // If the user provided a private key string, we sign the CURRENT state of the data
             if (signature.length() > 500) {
                 finalSignature = identityService.signIdentityPayload(normalizedJson, signature);
