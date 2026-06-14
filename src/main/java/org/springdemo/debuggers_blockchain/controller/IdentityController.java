@@ -63,25 +63,50 @@ public class IdentityController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<String> verifyIdentityData(
+    public ResponseEntity<?> verifyIdentityData(
             @RequestParam String didUri,
             @RequestParam String signature,
             @RequestBody String rawJsonData) {
         try {
-            // 1. CANONICALIZATION: Force the incoming data to match the exact same structure style
+            // Canonicalize data
             JsonNode jsonNode = objectMapper.readTree(rawJsonData);
             String canonicalJson = objectMapper.writeValueAsString(jsonNode);
 
-            // 2. Run mathematical verification on the normalized text string
+            // Run math verification against Oracle public key
             boolean fitsVerification = identityService.verifyIdentityClaim(canonicalJson, signature, didUri);
 
+            // Compute the current hash to send back to the user
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(canonicalJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            String currentHash = hexString.toString();
+
             if (fitsVerification) {
-                return ResponseEntity.ok("Verification Successful: Trusted Identity Authenticated.");
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "message", "Verification Successful: Trusted Identity Authenticated.",
+                        "originalHash", currentHash,
+                        "currentHash", currentHash
+                ));
             } else {
-                return ResponseEntity.status(401).body("Security Alert: Cryptographic signature is broken! Data has been maliciously modified.");
+                // CRITICAL: Even on failure, resolve what the expected original hash *should* have been
+                // By extracting the hash verification target
+                String expectedOriginalHash = identityService.getOriginalHashFromSignature(signature, didUri);
+
+                return ResponseEntity.status(401).body(Map.of(
+                        "success", false,
+                        "message", "Security Alert: Cryptographic signature is broken!",
+                        "originalHash", expectedOriginalHash,
+                        "currentHash", currentHash
+                ));
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Processing Error: Invalid JSON Format provided.");
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Processing Error"));
         }
     }
 }

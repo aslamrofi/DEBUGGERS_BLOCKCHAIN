@@ -303,34 +303,31 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: jsonData
             });
-            const resultText = await response.text();
-            const isOk = response.ok;
 
-            // 1. Calculate actual raw hash from current textbox data
-            const currentRawHash = await calculateSHA256(jsonData);
-            const truncatedCurrent = currentRawHash.substring(0, 32) + "...";
-            document.getElementById('hashCurrentDisplay').innerText = truncatedCurrent;
+            const data = await response.json(); // Read JSON instead of plain text now
 
-            // 2. Set the Original Hash display
-            if (isOk) {
-                // If verification passes, the signature's inner hash matches perfectly
-                document.getElementById('hashOriginalDisplay').innerText = truncatedCurrent;
+            // Extract the strings passed down by your Java engine
+            const origHashTruncated = data.originalHash.substring(0, 32) + "...";
+            const currHashTruncated = data.currentHash.substring(0, 32) + "...";
+
+            // Display them in the monitor boxes
+            document.getElementById('hashOriginalDisplay').innerText = origHashTruncated;
+            document.getElementById('hashCurrentDisplay').innerText = currHashTruncated;
+
+            if (data.success) {
                 document.getElementById('hashCurrentStatus').innerText = "[VALID]";
                 document.getElementById('hashCurrentStatus').style.color = "#4ade80";
+                outDiv.style.color = "#4ade80";
             } else {
-                // If broken, generate a simulated broken hash for visual comparison
-                const baselineBrokenHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-                document.getElementById('hashOriginalDisplay').innerText = baselineBrokenHash.substring(0, 32) + "...";
                 document.getElementById('hashCurrentStatus').innerText = "[TAMPERED]";
                 document.getElementById('hashCurrentStatus').style.color = "#ef4444";
+                outDiv.style.color = "#ef4444";
             }
 
             outDiv.style.display = "block";
-            outDiv.innerText = `[SERVER RESPONSE]: ${resultText}`;
-            outDiv.style.color = isOk ? "#4ade80" : "#ef4444";
+            outDiv.innerText = `[SERVER RESPONSE]: ${data.message}`;
         } catch (err) {
-            outDiv.innerText = "[ERROR]: " + err;
-            console.error(err);
+            outDiv.innerText = "[ERROR]: Synchronization exception.";
         }
     }
 
