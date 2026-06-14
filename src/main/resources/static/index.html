@@ -76,18 +76,11 @@
                     <input type="text" id="regName" value="Ryan" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
                 </div>
                 <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569; font-size: 0.9rem;">Faculty:</label>
-                    <input type="text" id="regFaculty" value="FSKTM" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569; font-size: 0.9rem;">Enrollment Status:</label>
-                    <input type="text" id="regStatus" value="Active Student" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                </div>
-                <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: bold; color: #475569; font-size: 0.9rem;">Starting CGPA:</label>
                     <input type="text" id="regCgpa" value="3.91" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
                 </div>
             </div>
+        </div>
         </div>
 
         <div class="btn-group">
@@ -136,15 +129,15 @@
         <!-- JSON Examples -->
         <div class="syntax-card">
             <div class="syntax-title">JSON Examples: </div>
-            <div class="syntax-code">{"name": "Aslam",  "faculty": "FSKTM", "status": "Active Student", "cgpa": "3.97"}</div>
-            <div class="syntax-code">{"name": "Hairie", "faculty": "FSKTM", "status": "Active Student", "cgpa": "3.88"}</div>
-            <div class="syntax-code">{"name": "Ryan", "faculty": "FSKTM", "status": "Active Student", "cgpa": "3.91"}</div>
-            <div class="syntax-code">{"name": "Iqmal", "faculty": "FSKTM", "status": "Graduated", "cgpa": "3.79"}</div>
-            <div class="syntax-code">{"name": "Iyad", "faculty": "FSKTM", "status": "Active Student", "cgpa": "3.99"}</div>
+            <div class="syntax-code">{"name": "Aslam", "cgpa": "3.97"}</div>
+            <div class="syntax-code">{"name": "Hairie", "cgpa": "3.88"}</div>
+            <div class="syntax-code">{"name": "Ryan", "cgpa": "3.91"}</div>
+            <div class="syntax-code">{"name": "Iqmal", "cgpa": "3.79"}</div>
+            <div class="syntax-code">{"name": "Iyad", "cgpa": "3.99"}</div>
         </div>
 
         <label for="verifyJson">Identity Data Claims Payload (JSON Example):</label>
-        <textarea id="verifyJson" style="margin-bottom: 15px;">{"name": "Aslam", "faculty": "FSKTM", "status": "Active Student", "cgpa": "3.97"}</textarea>
+        <textarea id="verifyJson" style="margin-bottom: 15px;">{"name": "Aslam", "cgpa": "3.97"}</textarea>
 
         <div class="btn-group">
             <button onclick="verifyIdentity()">Verify Integrity & Authenticate</button>
@@ -162,8 +155,6 @@
         // Dynamically build the JSON object based on what you typed in the website text fields
         const studentPayload = {
             name: document.getElementById('regName').value,
-            faculty: document.getElementById('regFaculty').value,
-            status: document.getElementById('regStatus').value,
             cgpa: document.getElementById('regCgpa').value
         };
 
@@ -174,7 +165,7 @@
             const response = await fetch(`/api/identity/register?didUri=${encodeURIComponent(didUri)}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(studentPayload) // <--- Sends your custom web input to Java
+                body: JSON.stringify(studentPayload)
             });
             const data = await response.json();
             outDiv.innerText = JSON.stringify(data, null, 2);
@@ -229,7 +220,7 @@
         let dataTextArea = document.getElementById('verifyJson');
         try {
             let parsed = JSON.parse(dataTextArea.value);
-            parsed.cgpa = "4.00"; // Alter the core metric maliciously
+            parsed.cgpa = "4.00";
             dataTextArea.value = JSON.stringify(parsed);
 
             const outDiv = document.getElementById('verifyOutput');
@@ -240,6 +231,7 @@
             alert("Please make sure your Identity Data contains valid JSON formatting before simulating an attack.");
         }
     }
+
 </script>
 
 </body>

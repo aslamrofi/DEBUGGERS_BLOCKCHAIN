@@ -21,16 +21,20 @@ public class IdentityController {
     @PostMapping("/register")
     public ResponseEntity<?> registerIdentity(
             @RequestParam String didUri,
-            @RequestBody String customJsonData) {
+            @RequestBody Map<String, String> payload) {
         try {
-            // 1. CANONICALIZATION: Parse and serialize to strip all formatting/newlines/spaces
-            JsonNode jsonNode = objectMapper.readTree(customJsonData);
+            // 1. Build a streamlined JSON string containing ONLY name and cgpa
+            String simplifiedJson = String.format("{\"name\": \"%s\", \"cgpa\": \"%s\"}",
+                    payload.get("name"), payload.get("cgpa"));
+
+            // Canonicalize using Jackson to eliminate whitespace discrepancies
+            JsonNode jsonNode = objectMapper.readTree(simplifiedJson);
             String canonicalJson = objectMapper.writeValueAsString(jsonNode);
 
-            // 2. Generate keys and anchor public key to Oracle 19c
+            // 2. Generate asymmetric keys and commit the public key anchor to Oracle 19c
             String privateKeyBase64 = identityService.createSovereignIdentity(didUri);
 
-            // 3. Sign the exact CANONICAL string
+            // 3. Digitally sign the standardized compact dataset
             String initialSignature = identityService.signIdentityPayload(canonicalJson, privateKeyBase64);
 
             return ResponseEntity.ok(Map.of(
@@ -40,7 +44,7 @@ public class IdentityController {
                     "official_immutable_signature", initialSignature
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Registration Error: " + e.getLocalizedMessage());
+            return ResponseEntity.badRequest().body("Registration Failure: " + e.getLocalizedMessage());
         }
     }
 
