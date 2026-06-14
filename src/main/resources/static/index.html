@@ -200,7 +200,34 @@
             console.error(err);
         }
     }
+    async function refreshLedgerTable() {
+        const ledgerBody = document.getElementById('oracleLedgerBody');
 
+        try {
+            const response = await fetch('/api/identity/ledger');
+            const entries = await response.json();
+
+            // Clear the "Register an identity..." placeholder
+            ledgerBody.innerHTML = "";
+
+            entries.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; color: #0369a1;">${entry.did_uri}</td>
+                <td style="border: 1px solid #cbd5e1; padding: 8px; color: #059669; font-size: 0.7rem; word-break: break-all;">
+                    ${entry.public_key_base64.substring(0, 50)}... (Anchored)
+                </td>
+            `;
+                ledgerBody.appendChild(row);
+            });
+        } catch (err) {
+            console.error("Ledger sync failed:", err);
+        }
+    }
+
+    // Call this at the end of your registerIdentity() function
+    // after the successful registration fetch:
+    await refreshLedgerTable();
     async function verifyIdentity() {
         const didUri = document.getElementById('verifyDid').value;
         const signature = document.getElementById('verifySignature').value;

@@ -6,6 +6,8 @@ import org.springdemo.debuggers_blockchain.service.IdentityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -45,6 +47,18 @@ public class IdentityController {
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Registration Failure: " + e.getLocalizedMessage());
+        }
+    }
+
+    @GetMapping("/ledger")
+    public ResponseEntity<?> getAllLedgerEntries() {
+        try {
+            // This method should call a service that runs:
+            // SELECT did_uri, public_key_base64 FROM CSBC_BLOCKCHAIN_LEDGER
+            List<Map<String, String>> allEntries = identityService.getAllRegisteredIdentities();
+            return ResponseEntity.ok(allEntries);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to retrieve ledger.");
         }
     }
 
