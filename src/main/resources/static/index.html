@@ -59,17 +59,10 @@
         <input type="text" id="regDid" value="did:csbc:ryan">
 
         <div style="background: #e2e8f0; padding: 20px; border-radius: 8px; margin-top: 20px; margin-bottom: 20px;">
-            <span style="font-weight: bold; color: #1e3a8a; display: block; margin-bottom: 15px;">Set Initial Identity Profile Claims:</span>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div>
-                    <label style="margin-top:0;">Student Name:</label>
-                    <input type="text" id="regName" value="Ryan">
-                </div>
-                <div>
-                    <label style="margin-top:0;">Starting CGPA:</label>
-                    <input type="text" id="regCgpa" value="3.91">
-                </div>
-            </div>
+            <span style="font-weight: bold; color: #1e3a8a; display: block; margin-bottom: 15px;">Set Identity Claim:</span>
+
+            <label for="regId" style="margin-top:0;">4-Digit Student ID:</label>
+            <input type="text" id="regId" value="1234" maxlength="4" pattern="\d{4}" placeholder="Example: 1234">
         </div>
 
         <div class="btn-group">
@@ -114,9 +107,9 @@
         <div class="explanation">
             <strong>How it works (Decentralized Trust):</strong>
             <ul>
-                <li>The user sends a claims statement (JSON) and a cryptographic signature.</li>
+                <li>The user enters a <strong>DID URI</strong>, a <strong>4-digit ID</strong>, and a cryptographic signature.</li>
                 <li>Verifier resolves the Public Key from Oracle via the <strong>DID URI</strong>.</li>
-                <li>If the JSON data changes by even one character, verification fails.</li>
+                <li>If the 4-digit ID changes by even one digit, verification fails.</li>
             </ul>
         </div>
 
@@ -126,40 +119,30 @@
         <label for="verifySignature">Cryptographic Signature:</label>
         <textarea id="verifySignature" placeholder="Paste the official immutable signature generated above..."></textarea>
 
-        <label>Identity Data Claims Payload:</label>
-        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: stretch; margin-bottom: 20px;">
+        <label for="verifyId">4-Digit Student ID:</label>
+        <input
+                type="text"
+                id="verifyId"
+                value="1234"
+                maxlength="4"
+                inputmode="numeric"
+                pattern="\d{4}"
+                placeholder="Example: 1234"
+                oninput="syncIdToJson()"
+        >
 
-            <div style="background: #e2e8f0; padding: 20px; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <span style="font-weight: bold; color: #1e3a8a; display: block; margin-bottom: 15px; font-size: 1rem;">Active Verification Claims:</span>
+        <textarea id="verifyJson" style="display: none;">{"id":"1234"}</textarea>
 
-                    <label for="quickName" style="margin-top: 0; font-size: 0.85rem; color: #475569;">Student Name:</label>
-                    <input type="text" id="quickName" value="Ryan" placeholder="Example: Ryan" style="margin-bottom: 15px; width: 100%;">
-
-                    <label for="quickCgpa" style="margin-top: 0; font-size: 0.85rem; color: #475569;">Target CGPA Matrix:</label>
-                    <input type="text" id="quickCgpa" value="3.91" placeholder="Example: 3.91" style="margin-bottom: 15px; width: 100%;">
-                </div>
-
-                <button onclick="applyClaimsToJson()" style="width: 100%; background: #0284c7; margin-top: 10px;">Sync & Update Claims Vector</button>
-            </div>
-
-            <div style="display: flex; flex-direction: column;">
-                <span style="font-size: 0.8rem; font-weight: bold; color: #64748b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em;">Compiled JSON Payload (Read-Only Matrix)</span>
-                <textarea id="verifyJson" style="flex-grow: 1; height: calc(100% - 25px); margin-bottom: 0; background: #fafafa; color: #334155;" readonly>{"name": "Ryan", "cgpa": "3.91"}</textarea>
-            </div>
-
-        </div>
-
-        <!-- NEW: CRYPTOGRAPHIC FINGERPRINT COMPARISON MONITOR -->
+        <!-- CRYPTOGRAPHIC FINGERPRINT COMPARISON MONITOR -->
         <div style="margin-top: 20px; background: #1e293b; padding: 20px; border-radius: 8px; color: #f8fafc; font-family: monospace; font-size: 0.85rem;">
-    <span style="display: block; color: #94a3b8; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">
-        Live Hash Comparison Monitor (SHA-256)
-    </span>
+        <span style="display: block; color: #94a3b8; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">
+            Live Hash Comparison Monitor (SHA-256)
+        </span>
 
             <div style="margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>1. Original Hash (from Signature):</span>
-                    <span id="hashOriginalStatus" style="color: #4ade80;">[SECURE]</span>
+                    <span>1. Original Hash:</span>
+                    <span id="hashOriginalStatus" style="color: #4ade80;">[LOCKED]</span>
                 </div>
                 <div id="hashOriginalDisplay" style="background: #0f172a; padding: 8px; border-radius: 4px; color: #38bdf8; overflow-wrap: break-word;">
                     ****************************************************************
@@ -168,8 +151,8 @@
 
             <div style="margin-bottom: 5px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>2. Current Hash (from Textbox):</span>
-                    <span id="hashCurrentStatus" style="color: #4ade80;">[VALID]</span>
+                    <span>2. Current ID Payload Hash:</span>
+                    <span id="hashCurrentStatus" style="color: #4ade80;">[READY]</span>
                 </div>
                 <div id="hashCurrentDisplay" style="background: #0f172a; padding: 8px; border-radius: 4px; color: #38bdf8; overflow-wrap: break-word;">
                     ****************************************************************
@@ -187,12 +170,11 @@
 <script>
     async function registerIdentity() {
         const didUri = document.getElementById('regDid').value;
+        const studentId = document.getElementById('regId').value; // Get the ID
         const outDiv = document.getElementById('regOutput');
 
-        const studentPayload = {
-            name: document.getElementById('regName').value,
-            cgpa: document.getElementById('regCgpa').value
-        };
+        // Create payload with only the ID
+        const studentPayload = { id: studentId };
 
         outDiv.style.display = "block";
         outDiv.style.color = "#38bdf8";
@@ -214,21 +196,17 @@
 
             const data = await response.json();
             outDiv.innerText = JSON.stringify(data, null, 2);
-            outDiv.style.color = "#38bdf8";
 
             if (data.official_immutable_signature) {
                 document.getElementById('verifyDid').value = data.did;
                 document.getElementById('verifySignature').value = data.official_immutable_signature;
-                document.getElementById('quickName').value = studentPayload.name;
-                document.getElementById('quickCgpa').value = studentPayload.cgpa;
-                document.getElementById('verifyJson').value = JSON.stringify(studentPayload, null, 2);
+                document.getElementById('verifyId').value = studentId; // Set the ID in Section 2
+                document.getElementById('verifyJson').value = JSON.stringify(studentPayload);
 
                 await refreshLedgerTable();
             }
         } catch (err) {
-            outDiv.innerText = "[ERROR]: Server connection failed.\n" + err;
-            outDiv.style.color = "#ef4444";
-            console.error(err);
+            outDiv.innerText = "[ERROR]: Server connection failed.";
         }
     }
 
@@ -331,23 +309,22 @@
         }
     }
 
-    function applyClaimsToJson() {
-        const parsed = {
-            name: document.getElementById('quickName').value,
-            cgpa: document.getElementById('quickCgpa').value
-        };
+    function syncIdToJson() {
+        const id = document.getElementById('verifyId').value;
 
-        document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
+        document.getElementById('verifyJson').value = JSON.stringify({
+            id: id
+        });
     }
 
     async function simulateAttack() {
         try {
-            document.getElementById('quickCgpa').value = "4.00";
-            const parsed = { name: document.getElementById('quickName').value, cgpa: "4.00" };
-            const attackJson = JSON.stringify(parsed, null, 2);
+            const idField = document.getElementById('verifyId');
+            idField.value = "9999"; // Change ID to a fake one
+
+            const attackJson = JSON.stringify({ id: "9999" });
             document.getElementById('verifyJson').value = attackJson;
 
-            // Compute and show the modified raw hash instantly
             const hackedRawHash = await calculateSHA256(attackJson);
 
             document.getElementById('hashCurrentStatus').innerText = "[TAMPERED]";
@@ -357,8 +334,8 @@
             const outDiv = document.getElementById('verifyOutput');
             outDiv.style.display = "block";
             outDiv.style.color = "#f59e0b";
-            outDiv.innerText = "[ATTACK]: CGPA maliciously changed to 4.00! Notice how the text fingerprint string below changed completely.";
-        } catch(e) { alert("JSON parsing error."); }
+            outDiv.innerText = "[ATTACK]: Student ID changed to 9999! The digital fingerprint (hash) is now mismatched.";
+        } catch(e) { alert("Attack Simulation Error"); }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
