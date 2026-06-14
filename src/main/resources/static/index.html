@@ -280,6 +280,16 @@
         }
     }
 
+    async function calculateSHA256(text) {
+        // Standardize input string (canonicalization) to strip formatting variations
+        const cleanText = JSON.stringify(JSON.parse(text));
+        const msgBuffer = new TextEncoder().encode(cleanText);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        // Convert bytes to hex string
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
     async function verifyIdentity() {
         const didUri = document.getElementById('verifyDid').value;
         const signature = document.getElementById('verifySignature').value;
@@ -294,20 +304,33 @@
                 body: jsonData
             });
             const resultText = await response.text();
-
-            // Update the Visual Monitor
             const isOk = response.ok;
-            document.getElementById('hashOriginalDisplay').innerText = "SHA256_MATCH_VERIFIED_BY_RSA_PUBLIC_KEY";
-            document.getElementById('hashCurrentDisplay').innerText = isOk ? "MATCH_FOUND_DATA_INTEGRITY_CONFIRMED" : "MISMATCH_DETECTED_DATA_CORRUPTED";
 
-            document.getElementById('hashCurrentStatus').innerText = isOk ? "[VALID]" : "[TAMPERED]";
-            document.getElementById('hashCurrentStatus').style.color = isOk ? "#4ade80" : "#ef4444";
+            // 1. Calculate actual raw hash from current textbox data
+            const currentRawHash = await calculateSHA256(jsonData);
+            const truncatedCurrent = currentRawHash.substring(0, 32) + "...";
+            document.getElementById('hashCurrentDisplay').innerText = truncatedCurrent;
+
+            // 2. Set the Original Hash display
+            if (isOk) {
+                // If verification passes, the signature's inner hash matches perfectly
+                document.getElementById('hashOriginalDisplay').innerText = truncatedCurrent;
+                document.getElementById('hashCurrentStatus').innerText = "[VALID]";
+                document.getElementById('hashCurrentStatus').style.color = "#4ade80";
+            } else {
+                // If broken, generate a simulated broken hash for visual comparison
+                const baselineBrokenHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+                document.getElementById('hashOriginalDisplay').innerText = baselineBrokenHash.substring(0, 32) + "...";
+                document.getElementById('hashCurrentStatus').innerText = "[TAMPERED]";
+                document.getElementById('hashCurrentStatus').style.color = "#ef4444";
+            }
 
             outDiv.style.display = "block";
             outDiv.innerText = `[SERVER RESPONSE]: ${resultText}`;
             outDiv.style.color = isOk ? "#4ade80" : "#ef4444";
         } catch (err) {
             outDiv.innerText = "[ERROR]: " + err;
+            console.error(err);
         }
     }
 
@@ -320,24 +343,25 @@
         document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
     }
 
-    function simulateAttack() {
+    async function simulateAttack() {
         try {
-            // Change the CGPA
             document.getElementById('quickCgpa').value = "4.00";
             const parsed = { name: document.getElementById('quickName').value, cgpa: "4.00" };
-            document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
+            const attackJson = JSON.stringify(parsed, null, 2);
+            document.getElementById('verifyJson').value = attackJson;
 
-            // Show the mismatch instantly in the monitor
+            // Compute and show the modified raw hash instantly
+            const hackedRawHash = await calculateSHA256(attackJson);
+
             document.getElementById('hashCurrentStatus').innerText = "[TAMPERED]";
             document.getElementById('hashCurrentStatus').style.color = "#ef4444";
-            document.getElementById('hashCurrentDisplay').innerText = "FINGERPRINT_ALTERED_BY_INPUT_CHANGE";
-            document.getElementById('hashCurrentDisplay').style.color = "#f59e0b";
+            document.getElementById('hashCurrentDisplay').innerText = hackedRawHash.substring(0, 32) + "...";
 
             const outDiv = document.getElementById('verifyOutput');
             outDiv.style.display = "block";
             outDiv.style.color = "#f59e0b";
-            outDiv.innerText = "[ATTACK]: CGPA maliciously changed to 4.00! The hash no longer matches the signature.";
-        } catch(e) { alert("JSON error."); }
+            outDiv.innerText = "[ATTACK]: CGPA maliciously changed to 4.00! Notice how the text fingerprint string below changed completely.";
+        } catch(e) { alert("JSON parsing error."); }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
