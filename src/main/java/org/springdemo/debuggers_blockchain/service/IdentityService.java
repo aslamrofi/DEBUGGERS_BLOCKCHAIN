@@ -4,6 +4,9 @@ import org.springdemo.debuggers_blockchain.model.LedgerEntity;
 import org.springdemo.debuggers_blockchain.repository.LedgerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import java.security.*;
 import java.security.spec.X509EncodedKeySpec;
@@ -60,4 +63,19 @@ public class IdentityService {
 
         return publicSignature.verify(Base64.getDecoder().decode(signatureBase64));
     }
+
+    // Resolves all registered anchors from Oracle via the JPA Repository
+    public List<Map<String, String>> getAllRegisteredIdentities() throws Exception {
+        // Fetch all LedgerEntity rows from the database table
+        List<LedgerEntity> allRecords = ledgerRepository.findAll();
+
+        // Map the database entities into a list of lightweight key-value structures for the frontend
+        return allRecords.stream().map(record -> {
+            Map<String, String> entry = new java.util.HashMap<>();
+            entry.put("did_uri", record.getDidUri());
+            entry.put("public_key_base64", record.getPublicKeyBase64());
+            return entry;
+        }).collect(Collectors.toList());
+    }
+
 }
