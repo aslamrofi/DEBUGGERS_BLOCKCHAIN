@@ -185,19 +185,20 @@
                 document.getElementById('verifyDid').value = data.did;
                 document.getElementById('verifySignature').value = data.official_immutable_signature;
                 document.getElementById('verifyJson').value = JSON.stringify(studentPayload, null, 2);
+
+                // --- UPDATE TABLE HERE (Inside the IF block) ---
+                const ledgerBody = document.getElementById('oracleLedgerBody');
+                ledgerBody.innerHTML = `
+                <tr>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; color: #0369a1;">${data.did}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; color: #059669;">MIIBIjANBgkqhkiG9w0BAQEFA... (Anchored)</td>
+                </tr>
+            `;
             }
         } catch (err) {
             outDiv.innerText = "[ERROR]: Server connection failed.";
+            console.error(err);
         }
-        // Add this inside your registerIdentity() function after the successful fetch:
-        const ledgerBody = document.getElementById('oracleLedgerBody');
-        ledgerBody.innerHTML = `
-    <tr>
-        <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; color: #0369a1;">${data.did}</td>
-        <td style="border: 1px solid #cbd5e1; padding: 8px; color: #059669;">MIIBIjANBgkqhkiG9w0BAQEFA... (Anchored)</td>
-        <td style="border: 1px solid #cbd5e1; padding: 8px; color: #ef4444; font-weight: bold;">NULL / NOT FOUND ❌</td>
-    </tr>
-`;
     }
 
     async function verifyIdentity() {
@@ -237,10 +238,16 @@
 
     function simulateAttack() {
         try {
-            let dataBox = document.getElementById('verifyJson');
-            let parsed = JSON.parse(dataBox.value);
-            parsed.cgpa = "4.00"; // Maliciously change data
-            dataBox.value = JSON.stringify(parsed, null, 2);
+            // Change the Quick Edit input so the user sees the "hack"
+            document.getElementById('quickCgpa').value = "4.00";
+
+            // Update the JSON monitor
+            let parsed = {
+                name: document.getElementById('quickName').value,
+                cgpa: "4.00"
+            };
+            document.getElementById('verifyJson').value = JSON.stringify(parsed, null, 2);
+
             const outDiv = document.getElementById('verifyOutput');
             outDiv.style.display = "block";
             outDiv.style.color = "#f59e0b";
