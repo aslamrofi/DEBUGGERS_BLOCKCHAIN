@@ -4,7 +4,9 @@ import org.springdemo.debuggers_blockchain.service.IdentityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @RestController
 @RequestMapping("/api/identity")
@@ -12,6 +14,8 @@ public class IdentityController {
 
     @Autowired
     private IdentityService identityService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // Hardcoded static token used for challenge-response auth verification
     private static final String AUTH_CHALLENGE = "AUTHENTICATION_CHALLENGE_TOKEN";
